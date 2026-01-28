@@ -1,84 +1,80 @@
 <script setup>
-import { useClientId } from '../composables/useClientId';
-import { ref } from 'vue';
+import { useClientId } from "../composables/useClientId";
+import { ref } from "vue";
 
 const { clientId } = useClientId();
-const message = ref('')
-const loading = ref(false)
-const messages = ref([])  
-async function sendMessage(){
+const message = ref("");
+const loading = ref(false);
+const messages = ref([]);
+async function sendMessage() {
   if (!message.value.trim() || loading.value) return;
 
-  // 내 메시지 먼저 추가
+  // 노출용 메세지 - 나
   messages.value.push({
-    role: 'user',
-    content: message.value
-  })
+    role: "user",
+    content: message.value,
+  });
 
-  const userMessage = message.value
-  message.value = ''  // 입력창 초기화
-  loading.value = true
+  const userMessage = message.value;
+  message.value = ""; // 입력창 초기화
+  loading.value = true;
 
   try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
+    const response = await fetch("/api/chat", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         client_id: clientId.value,
-        message: userMessage
-      })
-    })
-    
-    const data = await response.json()
-    
-    // AI 응답 추가
+        message: userMessage,
+      }),
+    });
+
+    const data = await response.json();
+
     messages.value.push({
-      role: 'assistant',
-      content: data.reply  // API 응답 형식에 맞게 조정
-    })
-    
+      role: "assistant",
+      content: data.reply,
+    });
   } catch (error) {
-    console.error('전송 실패:', error)
+    console.error("전송 실패:", error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 </script>
 <template>
   <main class="main">
-    <!-- 채팅 박스 전체 -->
     <div class="chat-container">
-      
-      <!-- 모델 선택 헤더 -->
-  <div class="model-header">
-  <div class="model-icon"></div>
-  <span style="font-size:20px">GPT</span>
-</div>
-      
+      <div class="model-header">
+        <div class="model-icon"></div>
+        <span style="font-size: 20px">GPT</span>
+      </div>
+
       <!-- 메시지 목록 -->
       <div class="messages">
-          <div 
-              v-for="(msg, index) in messages" 
-              :key="index"
-              :class="['message', msg.role]"
-            >
+        <div
+          v-for="(msg, index) in messages"
+          :key="index"
+          :class="['message', msg.role]"
+        >
           <div class="bubble">{{ msg.content }}</div>
         </div>
       </div>
-      
+
       <!-- 입력 영역 -->
       <div class="input-area">
-          <input 
-            v-model="message"
-            type="text" 
-            placeholder="Type a message..."
-            @keyup.enter="sendMessage"
-          />
-        <button @click="sendMessage" :disabled="loading">{{ loading ? '...' : 'Send' }}</button>
+        <input
+          v-model="message"
+          type="text"
+          placeholder="Type a message..."
+          @keyup.enter="sendMessage"
+        />
+        <button @click="sendMessage" :disabled="loading">
+          {{ loading ? "..." : "Send" }}
+        </button>
       </div>
-      
     </div>
   </main>
 </template>
@@ -89,12 +85,12 @@ async function sendMessage(){
   padding: 20px;
   overflow: hidden;
   display: flex;
-  justify-content: center;  
+  justify-content: center;
 }
 
 .chat-container {
   width: 100%;
-  max-width: 1400px;         
+  max-width: 1400px;
   height: 80%;
   display: flex;
   flex-direction: column;
@@ -102,20 +98,20 @@ async function sendMessage(){
 }
 
 .messages {
-  flex: 1;            
-  overflow-y: auto;     /* 스크롤 */
-    min-height: 0; 
+  flex: 1;
+  overflow-y: auto; /* 스크롤 */
+  min-height: 0;
 }
 
 .input-area {
   display: flex;
   padding: 10px;
   gap: 10px;
-   border-top: 1px solid #ccc; 
+  border-top: 1px solid #ccc;
 }
 
 .input-area input {
-  flex: 1;              /* 남은 공간 전부 차지 */
+  flex: 1; /* 남은 공간 전부 차지 */
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -123,8 +119,8 @@ async function sendMessage(){
 
 .input-area button {
   padding: 10px 20px;
-  background-color: #555;  /* 진회색 */
-  color: #fff;             /* 흰색 글자 */
+  background-color: #555; /* 진회색 */
+  color: #fff; /* 흰색 글자 */
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -144,7 +140,6 @@ async function sendMessage(){
   background-color: #ccc;
   border-radius: 50%;
 }
-
 
 .message {
   display: flex;
