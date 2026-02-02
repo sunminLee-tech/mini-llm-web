@@ -20,28 +20,55 @@ async function sendMessage() {
   loading.value = true;
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chatbot`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        client_id: clientId.value,
-        message: userMessage,
-      }),
-    });
-
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/api/chatbot`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          client_id: clientId.value,
+          message: userMessage,
+        }),
+      }
+    );
     const data = await response.json();
+    const fullText = data.data;
 
     messages.value.push({
       role: "assistant",
-      content: data.reply,
+      content: "",
+    });
+
+    const lastIndex = messages.value.length - 1;
+
+    // 가짜 스트리밍 시작
+    fakeStreamingByWord(fullText, (partialText) => {
+      messages.value[lastIndex].content = partialText;
     });
   } catch (error) {
     console.error("전송 실패:", error);
   } finally {
     loading.value = false;
   }
+}
+
+function fakeStreamingByWord(text, onUpdate, speed = 60) {
+  const words = text.split(" ");
+  let index = 0;
+  let current = "";
+
+  const timer = setInterval(() => {
+    if (index >= words.length) {
+      clearInterval(timer);
+      return;
+    }
+
+    current += (index === 0 ? "" : " ") + words[index];
+    index++;
+    onUpdate(current);
+  }, speed);
 }
 </script>
 <template>
