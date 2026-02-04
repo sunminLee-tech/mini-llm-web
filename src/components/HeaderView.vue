@@ -1,10 +1,10 @@
 <script setup>
-
+const emit = defineEmits(["toggle-sidebar"]);
 </script>
 
 <template>
   <header class="header">
-    <button class="menu-btn">&#9776;</button> <!-- todo-->
+    <button class="menu-btn" @click="emit('toggle-sidebar')">&#9776;</button>
     <span class="title">Chatbot</span>
   </header>
 </template>

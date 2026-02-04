@@ -1,11 +1,21 @@
 <script setup>
 import { useClientId } from "../composables/useClientId";
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 
 const { clientId } = useClientId();
 const message = ref("");
 const loading = ref(false);
 const messages = ref([]);
+const messagesEl = ref(null);
+
+function scrollToBottom() {
+  nextTick(() => {
+    if (messagesEl.value) {
+      messagesEl.value.scrollTop = messagesEl.value.scrollHeight; // 스크롤 위치 / 컨텐츠 전체 높이
+    }
+  });
+}
+
 async function sendMessage() {
   if (!message.value.trim() || loading.value) return;
 
@@ -14,6 +24,7 @@ async function sendMessage() {
     role: "user",
     content: message.value,
   });
+  scrollToBottom();
 
   const userMessage = message.value;
   message.value = ""; // 입력창 초기화
@@ -46,6 +57,7 @@ async function sendMessage() {
     // 가짜 스트리밍 시작
     fakeStreamingByWord(fullText, (partialText) => {
       messages.value[lastIndex].content = partialText;
+      scrollToBottom();
     });
   } catch (error) {
     console.error("전송 실패:", error);
@@ -80,7 +92,7 @@ function fakeStreamingByWord(text, onUpdate, speed = 60) {
       </div>
 
       <!-- 메시지 목록 -->
-      <div class="messages">
+      <div class="messages" ref="messagesEl">
         <div
           v-for="(msg, index) in messages"
           :key="index"
