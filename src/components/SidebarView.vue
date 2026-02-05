@@ -5,12 +5,17 @@ defineProps({
     default: false,
   },
 });
+
+const emit = defineEmits(["navigate"]);
 </script>
 
 <template>
   <aside class="sidebar" :class="{ open }">
     <nav class="sidebar-menu">
-      <div class="sidebar-item">New Chat</div>
+      <div class="sidebar-item" @click="emit('navigate', 'chat')">New Chat</div>
+      <div class="sidebar-item" @click="emit('navigate', 'gallery')">
+        Gallery
+      </div>
     </nav>
   </aside>
 </template>
