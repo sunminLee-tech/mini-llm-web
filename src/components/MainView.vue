@@ -5,7 +5,9 @@ import { ref, nextTick } from "vue";
 const { clientId } = useClientId();
 const message = ref("");
 const loading = ref(false);
-const messages = ref([]);
+const messages = ref([
+  { role: "assistant", content: "안녕하세요! 어떻게 도와드릴까요? 😊" },
+]);
 const messagesEl = ref(null);
 
 function scrollToBottom() {
