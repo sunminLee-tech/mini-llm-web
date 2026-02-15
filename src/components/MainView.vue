@@ -1,6 +1,18 @@
 <script setup>
 import { useClientId } from "../composables/useClientId";
 import { ref, nextTick } from "vue";
+import { marked } from "marked";
+
+// marked 옵션 설정
+marked.setOptions({
+  breaks: true, // 줄바꿈을 <br>로 변환
+  gfm: true, // GitHub Flavored Markdown
+});
+
+function renderMarkdown(text) {
+  if (!text) return "";
+  return marked.parse(text);
+}
 
 const { clientId } = useClientId();
 const message = ref("");
@@ -100,7 +112,12 @@ function fakeStreamingByWord(text, onUpdate, speed = 60) {
           :key="index"
           :class="['message', msg.role]"
         >
-          <div class="bubble">{{ msg.content }}</div>
+          <div
+            v-if="msg.role === 'assistant'"
+            class="bubble markdown-body"
+            v-html="renderMarkdown(msg.content)"
+          ></div>
+          <div v-else class="bubble">{{ msg.content }}</div>
         </div>
       </div>
 
@@ -210,5 +227,98 @@ function fakeStreamingByWord(text, onUpdate, speed = 60) {
 .message.assistant .bubble {
   background-color: #e9e9e9;
   color: #333;
+}
+
+/* 마크다운 스타일 */
+.markdown-body :deep(p) {
+  margin: 0 0 10px 0;
+}
+
+.markdown-body :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.markdown-body :deep(code) {
+  background-color: #d4d4d4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+.markdown-body :deep(pre) {
+  background-color: #2d2d2d;
+  color: #f8f8f2;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.markdown-body :deep(pre code) {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.markdown-body :deep(li) {
+  margin: 5px 0;
+}
+
+.markdown-body :deep(blockquote) {
+  border-left: 4px solid #ccc;
+  margin: 10px 0;
+  padding-left: 15px;
+  color: #666;
+}
+
+.markdown-body :deep(table) {
+  border-collapse: collapse;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.markdown-body :deep(th) {
+  background-color: #d4d4d4;
+}
+
+.markdown-body :deep(a) {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.markdown-body :deep(a:hover) {
+  text-decoration: underline;
+}
+
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3) {
+  margin: 15px 0 10px 0;
+}
+
+.markdown-body :deep(h1) {
+  font-size: 1.4em;
+}
+
+.markdown-body :deep(h2) {
+  font-size: 1.2em;
+}
+
+.markdown-body :deep(h3) {
+  font-size: 1.1em;
 }
 </style>
