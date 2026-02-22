@@ -21,7 +21,7 @@ function renderMarkdown(text) {
   return marked.parse(text);
 }
 
-const { clientId } = useClientId();
+const { clientId, regenerateClientId } = useClientId();
 const message = ref("");
 const loading = ref(false);
 const messages = ref([
@@ -55,12 +55,11 @@ async function fetchChatMessages(targetClientId) {
 watch(
   () => props.historyClientId,
   (newClientId) => {
-    console.log("newClientId",newClientId);
-    console.log("clientId",clientId);
     if (newClientId) {
       fetchChatMessages(newClientId);
     } else {
-      // 새 채팅 (New Chat 클릭 시)
+      // 새 채팅 (New Chat 클릭 시) - 새 clientId 생성
+      regenerateClientId();
       messages.value = [
         { role: "ASSISTANT", content: "안녕하세요! 어떻게 도와드릴까요? 😊" },
       ];
