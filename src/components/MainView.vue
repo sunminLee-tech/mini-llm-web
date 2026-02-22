@@ -1,7 +1,14 @@
 <script setup>
 import { useClientId } from "../composables/useClientId";
-import { ref, nextTick } from "vue";
+import { ref, nextTick, watch } from "vue";
 import { marked } from "marked";
+
+const props = defineProps({
+  historyClientId: {
+    type: String,
+    default: null,
+  },
+});
 
 // marked 옵션 설정
 marked.setOptions({
@@ -18,7 +25,7 @@ const { clientId } = useClientId();
 const message = ref("");
 const loading = ref(false);
 const messages = ref([
-  { role: "assistant", content: "안녕하세요! 어떻게 도와드릴까요? 😊" },
+  { role: "ASSISTANT", content: "안녕하세요! 어떻게 도와드릴까요? 😊" },
 ]);
 const messagesEl = ref(null);
 
@@ -30,12 +37,43 @@ function scrollToBottom() {
   });
 }
 
+// 히스토리 대화 조회
+async function fetchChatMessages(targetClientId) {
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/api/chatbot/messages?client_id=${targetClientId}`
+    );
+    const data = await res.json();
+    messages.value = data.data || data;
+    scrollToBottom();
+  } catch (error) {
+    console.error("대화 내역 조회 실패:", error);
+  }
+}
+
+// historyClientId가 변경되면 해당 대화 내역 조회
+watch(
+  () => props.historyClientId,
+  (newClientId) => {
+    console.log("newClientId",newClientId);
+    console.log("clientId",clientId);
+    if (newClientId) {
+      fetchChatMessages(newClientId);
+    } else {
+      // 새 채팅 (New Chat 클릭 시)
+      messages.value = [
+        { role: "ASSISTANT", content: "안녕하세요! 어떻게 도와드릴까요? 😊" },
+      ];
+    }
+  }
+);
+
 async function sendMessage() {
   if (!message.value.trim() || loading.value) return;
 
   // 노출용 메세지 - 나
   messages.value.push({
-    role: "user",
+    role: "USER",
     content: message.value,
   });
   scrollToBottom();
@@ -62,7 +100,7 @@ async function sendMessage() {
     const fullText = data.data;
 
     messages.value.push({
-      role: "assistant",
+      role: "ASSISTANT",
       content: "",
     });
 
@@ -113,7 +151,7 @@ function fakeStreamingByWord(text, onUpdate, speed = 60) {
           :class="['message', msg.role]"
         >
           <div
-            v-if="msg.role === 'assistant'"
+            v-if="msg.role === 'ASSISTANT'"
             class="bubble markdown-body"
             v-html="renderMarkdown(msg.content)"
           ></div>
@@ -204,11 +242,11 @@ function fakeStreamingByWord(text, onUpdate, speed = 60) {
   margin: 10px;
 }
 
-.message.user {
+.message.USER {
   justify-content: flex-end;
 }
 
-.message.assistant {
+.message.ASSISTANT {
   justify-content: flex-start;
 }
 
@@ -219,12 +257,12 @@ function fakeStreamingByWord(text, onUpdate, speed = 60) {
   word-break: break-word;
 }
 
-.message.user .bubble {
+.message.USER .bubble {
   background-color: #555;
   color: #fff;
 }
 
-.message.assistant .bubble {
+.message.ASSISTANT .bubble {
   background-color: #e9e9e9;
   color: #333;
 }

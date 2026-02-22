@@ -7,6 +7,7 @@ import GalleryView from './components/GalleryView.vue'
 
 const sidebarOpen = ref(false)
 const currentView = ref('chat')
+const historyClientId = ref(null)
 
 const views = {
   chat: MainView,
@@ -18,7 +19,14 @@ function toggleSidebar() {
 }
 
 function navigate(view) {
-  currentView.value = view
+  if (typeof view === 'object' && view.type === 'history') {
+    // 히스토리 클릭 시
+    currentView.value = 'chat'
+    historyClientId.value = view.clientId
+  } else {
+    currentView.value = view
+    historyClientId.value = null // 새 채팅이면 히스토리 초기화
+  }
 }
 </script>
 
@@ -27,7 +35,7 @@ function navigate(view) {
   <HeaderView @toggle-sidebar="toggleSidebar"/>
   <div class="content">
     <SidebarView :open="sidebarOpen" @navigate="navigate"/>
-    <component :is="views[currentView]"/>
+    <component :is="views[currentView]" :history-client-id="historyClientId"/>
   </div>
  </div>
   
