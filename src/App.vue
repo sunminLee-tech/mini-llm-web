@@ -8,6 +8,8 @@ import GalleryView from './components/GalleryView.vue'
 const sidebarOpen = ref(false)
 const currentView = ref('chat')
 const historyClientId = ref(null)
+const sidebarRef = ref(null)
+const mainViewRef = ref(null)
 
 const views = {
   chat: MainView,
@@ -23,10 +25,19 @@ function navigate(view) {
     // 히스토리 클릭 시
     currentView.value = 'chat'
     historyClientId.value = view.clientId
+  } else if (view === 'chat') {
+    // New Chat 클릭 시
+    currentView.value = 'chat'
+    historyClientId.value = null
+    mainViewRef.value?.resetChat()
   } else {
     currentView.value = view
-    historyClientId.value = null // 새 채팅이면 히스토리 초기화
+    historyClientId.value = null
   }
+}
+
+function refreshHistory() {
+  sidebarRef.value?.fetchChatHistory()
 }
 </script>
 
@@ -34,8 +45,8 @@ function navigate(view) {
  <div class="app">
   <HeaderView @toggle-sidebar="toggleSidebar"/>
   <div class="content">
-    <SidebarView :open="sidebarOpen" @navigate="navigate"/>
-    <component :is="views[currentView]" :history-client-id="historyClientId"/>
+    <SidebarView ref="sidebarRef" :open="sidebarOpen" @navigate="navigate"/>
+    <component ref="mainViewRef" :is="views[currentView]" :history-client-id="historyClientId" @refresh-history="refreshHistory"/>
   </div>
  </div>
   

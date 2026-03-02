@@ -21,8 +21,27 @@ async function fetchChatHistory() {
   }
 }
 
+async function deleteChat(clientId) {
+  if (!confirm("대화를 삭제하시겠습니까?")) return;
+
+  try {
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chatbot/history/${clientId}`, {
+      method: "DELETE",
+    });
+    // 삭제 후 목록 갱신
+    chatHistory.value = chatHistory.value.filter((item) => item.clientId !== clientId);
+  } catch (error) {
+    console.error("대화 삭제 실패:", error);
+  }
+}
+
 onMounted(() => {
   fetchChatHistory();
+});
+
+// 외부에서 히스토리 갱신 가능하도록 노출
+defineExpose({
+  fetchChatHistory,
 });
 </script>
 
@@ -41,9 +60,19 @@ onMounted(() => {
           v-for="item in chatHistory"
           :key="item.clientId"
           class="history-item"
-          @click="emit('navigate', { type: 'history', clientId: item.clientId })"
         >
-          {{ item.title }}
+          <span
+            class="history-item-title"
+            @click="emit('navigate', { type: 'history', clientId: item.clientId })"
+          >
+            {{ item.title }}
+          </span>
+          <button
+            class="history-item-delete"
+            @click.stop="deleteChat(item.clientId)"
+          >
+            ✕
+          </button>
         </div>
         <div v-if="chatHistory.length === 0" class="history-empty">
           대화 내역이 없습니다
@@ -97,17 +126,44 @@ onMounted(() => {
 }
 
 .history-item {
+  display: flex;
+  align-items: center;
   padding: 8px 15px;
   border-radius: 8px;
-  cursor: pointer;
   font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .history-item:hover {
   background-color: #e0e0e0;
+}
+
+.history-item-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.history-item-delete {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.history-item:hover .history-item-delete {
+  opacity: 1;
+}
+
+.history-item-delete:hover {
+  background-color: #ddd;
+  color: #666;
 }
 
 .history-empty {

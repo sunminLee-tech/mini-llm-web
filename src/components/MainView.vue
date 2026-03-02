@@ -1,6 +1,6 @@
 <script setup>
 import { useClientId } from "../composables/useClientId";
-import { ref, nextTick, watch } from "vue";
+import { ref, nextTick, watch, onMounted } from "vue";
 import { marked } from "marked";
 
 const props = defineProps({
@@ -9,6 +9,8 @@ const props = defineProps({
     default: null,
   },
 });
+
+const emit = defineEmits(["refresh-history"]);
 
 // marked 옵션 설정
 marked.setOptions({
@@ -51,6 +53,21 @@ async function fetchChatMessages(targetClientId) {
   }
 }
 
+// 페이지 로드 시 새 clientId 생성 (새로고침 대응)
+onMounted(() => {
+  if (!props.historyClientId) {
+    regenerateClientId();
+  }
+});
+
+// 새 채팅 초기화 (New Chat 용)
+function resetChat() {
+  regenerateClientId();
+  messages.value = [
+    { role: "ASSISTANT", content: "안녕하세요! 어떻게 도와드릴까요? 😊" },
+  ];
+}
+
 // historyClientId가 변경되면 해당 대화 내역 조회
 watch(
   () => props.historyClientId,
@@ -58,14 +75,15 @@ watch(
     if (newClientId) {
       fetchChatMessages(newClientId);
     } else {
-      // 새 채팅 (New Chat 클릭 시) - 새 clientId 생성
-      regenerateClientId();
-      messages.value = [
-        { role: "ASSISTANT", content: "안녕하세요! 어떻게 도와드릴까요? 😊" },
-      ];
+      resetChat();
     }
   }
 );
+
+// 외부에서 호출 가능하도록 노출
+defineExpose({
+  resetChat,
+});
 
 async function sendMessage() {
   if (!message.value.trim() || loading.value) return;
@@ -110,6 +128,9 @@ async function sendMessage() {
       messages.value[lastIndex].content = partialText;
       scrollToBottom();
     });
+
+    // 히스토리 갱신 요청
+    emit("refresh-history");
   } catch (error) {
     console.error("전송 실패:", error);
   } finally {
